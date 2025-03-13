@@ -12,6 +12,13 @@ import { useState } from "react";
 import { useDispatch } from "react-redux";
 import { setContact } from "../store/contactSlice";
 
+interface FormData {
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+}
+
 export default function Contact() {
   const dispatch = useDispatch();
   const [form, setForm] = useState({
@@ -26,7 +33,7 @@ export default function Contact() {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     // Creating new contact with a unique ID
@@ -34,10 +41,28 @@ export default function Contact() {
       id: Date.now(),
       ...form,
     };
-    console.log("Form submitted:", form);
+
     dispatch(setContact(newContact));
-    alert("Form Submited Successfully!");
-    setForm({ name: "", email: "", subject: "", message: "" });
+
+    try {
+      const res = await fetch("../api/contact", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(newContact),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        alert("Form Submited Successfully!");
+        setForm({ name: "", email: "", subject: "", message: "" });
+      } else {
+        alert(data.error || "Error...Not Submiting");
+      }
+    } catch (error) {
+      console.log("Error", error);
+      alert("Error... Not submited");
+    }
   };
   return (
     <div className="bg-gray-100 text-black py-8 px-4 text-center font-semibold">
